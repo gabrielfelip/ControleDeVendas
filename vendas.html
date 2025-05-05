@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Controle de Vendas</title>
+  <style>
+    body {
+        font-size: 18px;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #d6d6d6;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #fff;
+      border: 2px solid #000;
+      border-radius: 5px;
+      max-width: 750px;
+      margin: auto;
+      padding: 20px 30px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border-bottom: 2px solid black;
+      padding-bottom: 10px;
+    }
+
+    fieldset {
+      border: 2px groove #333;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    legend {
+      font-weight: bold;
+      padding: 0 10px;
+    }
+
+    .product-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .product-item {
+      width: 48%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .product-item input[type="number"] {
+      width: 60px;
+      margin-left: 20px;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .payment-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .payment-section fieldset {
+      flex: 1;
+    }
+
+    select {
+      padding: 4px;
+      font-size: 14px;
+      font-size: 18px;
+    }
+
+    button {
+      display: block;
+      margin: 25px auto;
+      padding: 10px 40px;
+      font-size: 16px;
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    button:hover {
+      background-color: #005bb5;
+    }
+
+    .results {
+      border: 1px solid #333;
+      background-color: #f8f8f8;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+
+
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Controle de Vendas</h2>
+
+    <fieldset>
+      <legend>Selecione os produtos:</legend>
+      <div class="product-list" id="product-list">
+        <!-- Produtos via JS -->
+      </div>
+    </fieldset>
+
+    <div class="payment-section">
+      <fieldset>
+        <legend>Forma de pagamento</legend>
+        <label><input type="radio" name="pagamento" value="avista" checked> À vista</label><br/>
+        <label><input type="radio" name="pagamento" value="aprazo"> A prazo</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Parcelas</legend>
+        <select id="parcelas" disabled>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+          <option value="4">4x</option>
+          <option value="5">5x</option>
+        </select>
+      </fieldset>
+    </div>
+
+    <button onclick="calcularCompra()">Calcular</button>
+
+    <div class="results" id="resultado"></div>
+  </div>
+
+  <script>
+    const produtos = [
+      { nome: "Camiseta Regata", preco: 19.90 },
+      { nome: "Camisa Social", preco: 59.90 },
+      { nome: "Blusa", preco: 119.90 },
+      { nome: "Pullover", preco: 39.90 },
+      { nome: "Sapato", preco: 99.90 },
+      { nome: "Calça", preco: 38.90 },
+      { nome: "Meias", preco: 9.90 },
+      { nome: "Luvas", preco: 24.90 },
+      { nome: "Jaqueta", preco: 329.90 },
+      { nome: "Bermuda", preco: 69.90 },
+      { nome: "Chinelo", preco: 14.90 },
+      { nome: "Boné", preco: 6.90 }
+    ];
+
+    const productList = document.getElementById('product-list');
+    const parcelasSelect = document.getElementById('parcelas');
+    const resultado = document.getElementById('resultado');
+
+    produtos.forEach((produto, index) => {
+      const item = document.createElement('div');
+      item.className = 'product-item';
+      item.innerHTML = `
+        <label>
+          <input type="checkbox" id="prod${index}">
+          ${produto.nome} - R$ ${produto.preco.toFixed(2)}
+        </label>
+        <input type="number" id="qtd${index}" value="0" min="0" disabled>
+      `;
+      productList.appendChild(item);
+
+      document.getElementById(`prod${index}`).addEventListener('change', (e) => {
+        document.getElementById(`qtd${index}`).disabled = !e.target.checked;
+      });
+    });
+
+    document.querySelectorAll('input[name="pagamento"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        parcelasSelect.disabled = document.querySelector('input[name="pagamento"]:checked').value === "avista";
+      });
+    });
+
+    function calcularCompra() {
+      let total = 0;
+      let detalhes = "";
+
+      produtos.forEach((produto, index) => {
+        const checkbox = document.getElementById(`prod${index}`);
+        const qtd = parseInt(document.getElementById(`qtd${index}`).value);
+        if (checkbox.checked && qtd > 0) {
+          const subtotal = produto.preco * qtd;
+          total += subtotal;
+          detalhes += `<p>${produto.nome} x ${qtd} = R$ ${subtotal.toFixed(2)}</p>`;
+        }
+      });
+
+      if (total === 0) {
+        resultado.innerHTML = `<p style="color:red;">Nenhum produto selecionado!</p>`;
+        return;
+      }
+
+      const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
+      let final = total;
+      let msgFinal = `<h3>Resumo da Compra</h3>${detalhes}<p>Total: R$ ${total.toFixed(2)}</p>`;
+
+      if (pagamento === 'avista') {
+        const desconto = total * 0.085;
+        final = total - desconto;
+        msgFinal += `<p>Desconto à vista (8,5%): -R$ ${desconto.toFixed(2)}</p>`;
+        msgFinal += `<p><strong>Valor Final: R$ ${final.toFixed(2)}</strong></p>`;
+      } else {
+        const parcelas = parseInt(parcelasSelect.value);
+        const taxa = total * 0.06 + (6.90 * parcelas);
+        final = total + taxa;
+        const valorParcela = final / parcelas;
+
+        if (valorParcela < 10) {
+          resultado.innerHTML = `<p style="color:red;">Erro: valor da parcela (${valorParcela.toFixed(2)}) é inferior a R$ 10,00.</p>`;
+          return;
+        }
+
+        msgFinal += `<p>Taxa de parcelamento (6% + R$6,90/parcela): +R$ ${taxa.toFixed(2)}</p>`;
+        msgFinal += `<p><strong>Total parcelado: R$ ${final.toFixed(2)}</strong></p>`;
+        msgFinal += `<p><strong>${parcelas}x de R$ ${valorParcela.toFixed(2)}</strong></p>`;
+      }
+
+      resultado.innerHTML = msgFinal;
+    }
+  </script>
+</body>
+</html>
